@@ -7,19 +7,22 @@ import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.entity.ContentType;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.message.BasicNameValuePair;
 
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * @author Niko Köbler, http://www.n-k.de, @dasniko
@@ -65,17 +68,19 @@ public class SlackWebClient {
     }
 
     @SneakyThrows
-    private void sendRequest(String method, Map<String, String> reply) {
-        log.info("Sending {} request to Slack: {}", method, reply);
+    private void sendRequest(String method, Map<String, String> params) {
+        log.info("Sending {} request to Slack: {}", method, params);
 
-        reply.put("token", oauthAccessToken);
+        params.put("token", oauthAccessToken);
 
         HttpPost post = new HttpPost(SLACK_URL + method);
 
-        String jsonString = mapper.writeValueAsString(reply);
-        StringEntity stringEntity = new StringEntity(jsonString, ContentType.APPLICATION_JSON);
+        List<NameValuePair> nameValuePairs = params.keySet().stream()
+                .map(k -> new BasicNameValuePair(k, params.get(k)))
+                .collect(Collectors.toList());
 
-        post.setEntity(stringEntity);
+        UrlEncodedFormEntity entity = new UrlEncodedFormEntity(nameValuePairs);
+        post.setEntity(entity);
 
         HttpResponse response = httpClient.execute(post);
         getResponseString(response);
