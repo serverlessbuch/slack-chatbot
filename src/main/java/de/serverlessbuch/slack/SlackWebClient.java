@@ -66,9 +66,9 @@ public class SlackWebClient {
 
     @SneakyThrows
     private void sendRequest(String method, Map<String, String> reply) {
+        log.info("Sending {} request to Slack: {}", method, reply);
 
         reply.put("token", oauthAccessToken);
-        log.info("Sending {} request to Slack: {}", method, reply);
 
         HttpPost post = new HttpPost(SLACK_URL + method);
 
