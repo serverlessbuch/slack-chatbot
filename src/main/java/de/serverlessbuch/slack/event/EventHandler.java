@@ -4,8 +4,10 @@ import com.amazonaws.serverless.proxy.internal.model.AwsProxyRequest;
 import com.amazonaws.serverless.proxy.internal.model.AwsProxyResponse;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import de.serverlessbuch.slack.MapperUtil;
+import de.serverlessbuch.slack.OAuthRepo;
+import de.serverlessbuch.slack.SlackWebClient;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -24,8 +26,7 @@ public class EventHandler implements RequestHandler<AwsProxyRequest, AwsProxyRes
     public AwsProxyResponse handleRequest(AwsProxyRequest input, Context context) {
         log.info("Received body: {}", input.getBody());
 
-        TypeReference<Map<String, Object>> typeRef = new TypeReference<Map<String, Object>>() {};
-        Map<String, Object> request = mapper.readValue(input.getBody(), typeRef);
+        Map<String, Object> request = mapper.readValue(input.getBody(), MapperUtil.mapTypeReference);
 
         if (!System.getenv("SLACK_VERIFICATION_TOKEN").equals(request.get("token"))) {
             return new AwsProxyResponse(403);
@@ -44,7 +45,9 @@ public class EventHandler implements RequestHandler<AwsProxyRequest, AwsProxyRes
                 Event event = Event.of((Map<String, String>) request.get("event"));
                 log.info("Event {}", event);
                 if ("message".equals(event.getType())) {
-                    SlackWebClient slack = new SlackWebClient(System.getenv("SLACK_OAUTH_ACCESS_TOKEN"));
+                    OAuthRepo oAuthRepo = OAuthRepo.instance(System.getenv("S3_BUCKET"));
+                    String accessToken = oAuthRepo.getAccessToken((String) request.get("team_id"));
+                    SlackWebClient slack = new SlackWebClient(accessToken);
                     slack.postMessage(event.getText(), event.getChannel());
                 }
                 break;

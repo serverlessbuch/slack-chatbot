@@ -12,7 +12,14 @@ provider:
   deploymentBucket: dasniko.serverless.deployments.${self:provider.region}
   environment:
     SLACK_VERIFICATION_TOKEN: ${file(sls-props.yml):slack.verification_token}
-    SLACK_OAUTH_ACCESS_TOKEN: ${file(sls-props.yml):slack.oauth_access_token}
+    S3_BUCKET: ${file(sls-props.yml):s3.bucket}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - s3:GetObject
+        - s3:GetObjectVersion
+        - s3:PutObject
+      Resource: "arn:aws:s3:::${self:provider.environment.S3_BUCKET}/*"
 
 package:
   artifact: target/${self:service}.jar
@@ -24,9 +31,20 @@ functions:
       - http:
           path: /command
           method: POST
+  install:
+    handler: de.serverlessbuch.slack.InstallHandler
+    environment:
+      SLACK_CLIENT_ID: ${file(sls-props.yml):slack.client_id}
+    events:
+      - http: GET install
+  authorized:
+    handler: de.serverlessbuch.slack.AuthorizedHandler
+    environment:
+      SLACK_CLIENT_ID: ${file(sls-props.yml):slack.client_id}
+      SLACK_CLIENT_SECRET: ${file(sls-props.yml):slack.client_secret}
+    events:
+      - http: GET authorized
   event:
     handler: de.serverlessbuch.slack.event.EventHandler
     events:
-      - http:
-          path: /event
-          method: POST
+      - http: POST event
