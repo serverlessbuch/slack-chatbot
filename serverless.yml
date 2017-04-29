@@ -23,3 +23,9 @@ functions:
       - http:
           path: /command
           method: POST
+  event:
+    handler: de.serverlessbuch.slack.event.EventHandler
+    events:
+      - http:
+          path: /event
+          method: POST
