@@ -1,0 +1,25 @@
+service: slack-chatbot
+
+frameworkVersion: ">=1.2.0 <2.0.0"
+
+provider:
+  name: aws
+  runtime: java8
+  stage: demo
+  region: eu-central-1
+  memorySize: 256
+  timeout: 5
+  deploymentBucket: dasniko.serverless.deployments.${self:provider.region}
+  environment:
+    SLACK_VERIFICATION_TOKEN: ${file(sls-props.yml):slack.verification_token}
+
+package:
+  artifact: target/${self:service}.jar
+
+functions:
+  command:
+    handler: de.serverlessbuch.slack.command.CommandHandler
+    events:
+      - http:
+          path: /command
+          method: POST
