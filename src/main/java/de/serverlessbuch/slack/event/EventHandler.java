@@ -44,7 +44,7 @@ public class EventHandler implements RequestHandler<AwsProxyRequest, AwsProxyRes
                 //noinspection unchecked
                 Event event = Event.of((Map<String, String>) request.get("event"));
                 log.info("Event {}", event);
-                if ("message".equals(event.getType())) {
+                if ("message".equals(event.getType()) && !"bot_message".equals(event.getSubtype())) {
                     OAuthRepo oAuthRepo = OAuthRepo.instance(System.getenv("S3_BUCKET"));
                     String accessToken = oAuthRepo.getAccessToken((String) request.get("team_id"));
                     SlackWebClient slack = new SlackWebClient(accessToken);
