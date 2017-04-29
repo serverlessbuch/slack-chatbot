@@ -44,8 +44,8 @@ public class EventHandler implements RequestHandler<AwsProxyRequest, AwsProxyRes
                 Event event = Event.of((Map<String, String>) request.get("event"));
                 log.info("Event {}", event);
                 if ("message".equals(event.getType())) {
-                    response.setHeaders(Collections.singletonMap("Content-Type", "text/plain"));
-                    response.setBody(event.getText());
+                    SlackWebClient slack = new SlackWebClient(System.getenv("SLACK_OAUTH_ACCESS_TOKEN"));
+                    slack.postMessage(event.getText(), event.getChannel());
                 }
                 break;
         }
