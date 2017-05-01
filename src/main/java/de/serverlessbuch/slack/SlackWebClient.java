@@ -75,8 +75,8 @@ public class SlackWebClient {
 
         HttpPost post = new HttpPost(SLACK_URL + method);
 
-        List<NameValuePair> nameValuePairs = params.keySet().stream()
-                .map(k -> new BasicNameValuePair(k, params.get(k)))
+        List<NameValuePair> nameValuePairs = params.entrySet().stream()
+                .map(e -> new BasicNameValuePair(e.getKey(), e.getValue()))
                 .collect(Collectors.toList());
 
         UrlEncodedFormEntity entity = new UrlEncodedFormEntity(nameValuePairs);
