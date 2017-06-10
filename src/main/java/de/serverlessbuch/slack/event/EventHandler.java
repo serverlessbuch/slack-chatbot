@@ -26,13 +26,18 @@ public class EventHandler implements RequestHandler<AwsProxyRequest, AwsProxyRes
     public AwsProxyResponse handleRequest(AwsProxyRequest input, Context context) {
         log.info("Received body: {}", input.getBody());
 
+        AwsProxyResponse response = new AwsProxyResponse(200, Collections.singletonMap("X-Slack-No-Retry", "1"));
+
+        if (null != input.getHeaders().get("X-Slack-Retry-Num")) {
+            return response;
+        }
+
         Map<String, Object> request = mapper.readValue(input.getBody(), MapperUtil.mapTypeReference);
 
         if (!System.getenv("SLACK_VERIFICATION_TOKEN").equals(request.get("token"))) {
             return new AwsProxyResponse(403);
         }
 
-        AwsProxyResponse response = new AwsProxyResponse(200, Collections.singletonMap("X-Slack-No-Retry", "1"));
 
         switch (request.get("type").toString()) {
             case "url_verification":
